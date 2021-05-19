@@ -43,6 +43,16 @@ io.on("connection", socket => {
 
     socket.on('disconnect', () => {
         console.log(socket.id + ' disconnected')
+        for (var prop in chatDataList) {
+            if (Object.prototype.hasOwnProperty.call(chatDataList, prop)) {
+                chatDataList[prop].forEach(function (item, index) {
+                    if(chatDataList[prop][index].socket === socket.id) {
+                        chatDataList[prop].splice(index, 1)
+                    }
+                })
+            }
+        }
+        console.log(chatDataList)
         socket.broadcast.emit('remove_user', socket.id)
     })
     //======================================================================
