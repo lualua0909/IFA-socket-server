@@ -41,12 +41,19 @@ io.on("connection", socket => {
         })
     })
 
+    socket.on('send_notify', function (data) {
+        socket.broadcast.to(data.room).emit('receive_notify', {
+            sender: data.sender,
+            message: data.message
+        })
+    })
+
     socket.on('disconnect', () => {
         console.log(socket.id + ' disconnected')
         for (var prop in chatDataList) {
             if (Object.prototype.hasOwnProperty.call(chatDataList, prop)) {
                 chatDataList[prop].forEach(function (item, index) {
-                    if(chatDataList[prop][index].socket === socket.id) {
+                    if (chatDataList[prop][index].socket === socket.id) {
                         chatDataList[prop].splice(index, 1)
                     }
                 })
