@@ -1,15 +1,18 @@
 const express = require("express")
-const http = require("http")
+const https = require("https")
 const app = express()
-const server = http.createServer(app)
+var fs = require('fs');
+
+var privateKey  = fs.readFileSync('smarte.edu.vn.key', 'utf8');
+var certificate = fs.readFileSync('smarte.edu.vn.crt', 'utf8');
+var credentials = {key: privateKey, cert: certificate};
+const server = https.createServer(credentials, app)
+
 const socket = require("socket.io")
 const io = socket(server)
 var cors = require('cors')
 
 app.use(cors())
-const users = {}
-const socketToRoom = {}
-
 const chatDataList = {}
 
 io.on("connection", socket => {
