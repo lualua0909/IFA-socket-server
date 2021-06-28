@@ -10,13 +10,15 @@ const server = https.createServer(credentials, app)
 
 const socket = require("socket.io")
 const io = socket(server)
-var cors = require('cors')
 
+var cors = require('cors')
 app.use(cors())
+
 const chatDataList = {}
+const users = {}
+const socketToRoom = {}
 
 io.on("connection", socket => {
-    console.log(socket.id + ' ==== connected')
     //PRIVATE CHATTING CHANNEL
     socket.on('subscribe', function (data) {
         console.log('joining room', data.room)
@@ -50,9 +52,33 @@ io.on("connection", socket => {
             message: data.message
         })
     })
+    
+    // VIDEO CALL
+    socket.on("join room", roomID => {
+        console.log(`join room ${roomID}`)
+        if (users[roomID]) {
+            const length = users[roomID].length
+            users[roomID].push(socket.id)
+        } else {
+            users[roomID] = [socket.id]
+        }
+        socketToRoom[socket.id] = roomID
+        const usersInThisRoom = users[roomID].filter(id => id !== socket.id)
 
+        socket.emit("all users", usersInThisRoom)
+    })
+
+    socket.on("sending signal", payload => {
+        io.to(payload.userToSignal).emit('user joined', { signal: payload.signal, callerID: payload.callerID })
+    })
+
+    socket.on("returning signal", payload => {
+        io.to(payload.callerID).emit('receiving returned signal', { signal: payload.signal, id: socket.id })
+    })
+    //DISCONNECT
     socket.on('disconnect', () => {
         console.log(socket.id + ' disconnected')
+        // REMOVE FROM CHATTING
         for (var prop in chatDataList) {
             if (Object.prototype.hasOwnProperty.call(chatDataList, prop)) {
                 chatDataList[prop].forEach(function (item, index) {
@@ -64,32 +90,15 @@ io.on("connection", socket => {
         }
         console.log(chatDataList)
         socket.broadcast.emit('remove_user', socket.id)
+
+        //REMOVE FROM VIDEO CALL
+        const roomID = socketToRoom[socket.id]
+        let room = users[roomID]
+        if (room) {
+            room = room.filter(id => id !== socket.id)
+            users[roomID] = room
+        }
     })
-    //======================================================================
-    // socket.on("join room", roomID => {
-    //     if (users[roomID]) {
-    //         const length = users[roomID].length
-    //         if (length === 4) {
-    //             socket.emit("room full")
-    //             return
-    //         }
-    //         users[roomID].push(socket.id)
-    //     } else {
-    //         users[roomID] = [socket.id]
-    //     }
-    //     socketToRoom[socket.id] = roomID
-    //     const usersInThisRoom = users[roomID].filter(id => id !== socket.id)
-
-    //     socket.emit("all users", usersInThisRoom)
-    // })
-
-    // socket.on("sending signal", payload => {
-    //     io.to(payload.userToSignal).emit('user joined', { signal: payload.signal, callerID: payload.callerID })
-    // })
-
-    // socket.on("returning signal", payload => {
-    //     io.to(payload.callerID).emit('receiving returned signal', { signal: payload.signal, id: socket.id })
-    // })
 })
 
 
