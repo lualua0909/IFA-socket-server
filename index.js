@@ -88,3 +88,7 @@ io.on("connection", (socket) => {
 });
 
 server.listen(80, () => console.log("server is running on port 3001"));
+
+app.get("/", (req, res) => {
+  res.send("<h1>Hello world</h1>");
+});
