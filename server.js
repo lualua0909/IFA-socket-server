@@ -5,9 +5,7 @@ const server = https.createServer(app);
 
 const socket = require("socket.io");
 const io = socket(server);
-var cors = require("cors");
 
-app.use(cors());
 const chatDataList = {};
 
 io.on("connection", (socket) => {
