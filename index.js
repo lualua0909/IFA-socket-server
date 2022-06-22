@@ -87,4 +87,4 @@ io.on("connection", (socket) => {
   // })
 });
 
-server.listen(3001, () => console.log("server is running on port 3001"));
+server.listen(80, () => console.log("server is running on port 3001"));
